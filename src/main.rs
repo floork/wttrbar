@@ -62,7 +62,17 @@ fn main() {
     } else {
         loop {
             match client.get(&weather_url).send() {
-                Ok(response) => break response.json::<Value>().unwrap(),
+                Ok(response) => match response.json::<Value>() {
+                    Ok(parsed_json) => break parsed_json,
+                    Err(_) => {
+                        let error_response = json!({
+                            "text": "⛔",
+                            "tooltip": "Server not available or invalid response"
+                        });
+                        println!("{}", error_response);
+                        exit(0);
+                    }
+                },
                 Err(_) => {
                     iterations += 1;
                     thread::sleep(time::Duration::from_millis(500 * iterations));
